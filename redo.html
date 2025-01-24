@@ -2668,14 +2668,121 @@
 
         // Function to export applications to Excel
         function exportApplicationsToExcel() {
-            alert('Export applications functionality will be implemented here');
-            // Implement your export logic here
+            try {
+                // Get the applications data
+                const table = document.getElementById('application-list-table');
+                if (!table) {
+                    throw new Error('Table not found');
+                }
+
+                // Create CSV content
+                let csvContent = '\uFEFF'; // Add BOM for Excel to handle Chinese characters correctly
+                
+                // Add headers
+                const headers = [];
+                table.querySelectorAll('thead th').forEach(header => {
+                    headers.push(header.innerText);
+                });
+                csvContent += headers.join(',') + '\n';
+
+                // Add data rows
+                table.querySelectorAll('tbody tr').forEach(row => {
+                    const rowData = [];
+                    row.querySelectorAll('td').forEach(cell => {
+                        // Get only the text content, remove any HTML
+                        let cellText = cell.innerText.replace(/,/g, '，'); // Replace commas with Chinese comma
+                        // Remove any new lines
+                        cellText = cellText.replace(/\n/g, ' ');
+                        rowData.push('"' + cellText + '"');
+                    });
+                    csvContent += rowData.join(',') + '\n';
+                });
+
+                // Create blob and download
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                
+                // Get current date for filename
+                const date = new Date().toISOString().slice(0,10);
+                
+                link.setAttribute('href', url);
+                link.setAttribute('download', `Leave_Applications_${date}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showSyncStatus('Applications exported successfully');
+            } catch (error) {
+                console.error('Error exporting applications:', error);
+                alert('Error exporting applications: ' + error.message);
+            }
         }
 
         // Function to export penalties to Excel
         function exportPenaltiesToExcel() {
-            alert('Export penalties functionality will be implemented here');
-            // Implement your export logic here
+            try {
+                // Get the penalties data
+                const table = document.getElementById('penalty-table');
+                if (!table) {
+                    throw new Error('Table not found');
+                }
+
+                // Create CSV content
+                let csvContent = '\uFEFF'; // Add BOM for Excel to handle Chinese characters correctly
+                
+                // Add headers
+                const headers = [];
+                table.querySelectorAll('thead th').forEach(header => {
+                    headers.push(header.innerText);
+                });
+                csvContent += headers.join(',') + '\n';
+
+                // Add data rows
+                table.querySelectorAll('tbody tr').forEach(row => {
+                    const rowData = [];
+                    row.querySelectorAll('td').forEach(cell => {
+                        // Get text content and handle special cases
+                        let cellText = cell.innerText;
+                        
+                        // Handle amount column (remove currency symbol and 'Doubled' text)
+                        if (cellText.includes('$')) {
+                            cellText = cellText.replace('$', '')
+                                            .replace(' (Doubled)', '')
+                                            .replace(' (Double Cancelled)', '');
+                        }
+                        
+                        // Clean up the text
+                        cellText = cellText.replace(/,/g, '，') // Replace commas with Chinese comma
+                                        .replace(/\n/g, ' ') // Remove new lines
+                                        .trim();
+                        
+                        rowData.push('"' + cellText + '"');
+                    });
+                    csvContent += rowData.join(',') + '\n';
+                });
+
+                // Create blob and download
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                
+                // Get current date for filename
+                const date = new Date().toISOString().slice(0,10);
+                
+                link.setAttribute('href', url);
+                link.setAttribute('download', `Penalties_${date}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showSyncStatus('Penalties exported successfully');
+            } catch (error) {
+                console.error('Error exporting penalties:', error);
+                alert('Error exporting penalties: ' + error.message);
+            }
         }
 
         // Function to show employee interface
@@ -3056,9 +3163,15 @@
 
         // Add event listener when the document is loaded
         document.addEventListener('DOMContentLoaded', function() {
-            const clearRecordsBtn = document.getElementById('clearRecordsBtn');
-            if (clearRecordsBtn) {
-                clearRecordsBtn.addEventListener('click', clearAllLeaveRecords);
+            const exportApplicationsBtn = document.getElementById('export-applications-btn');
+            const exportPenaltiesBtn = document.getElementById('export-penalties-btn');
+
+            if (exportApplicationsBtn) {
+                exportApplicationsBtn.addEventListener('click', exportApplicationsToExcel);
+            }
+
+            if (exportPenaltiesBtn) {
+                exportPenaltiesBtn.addEventListener('click', exportPenaltiesToExcel);
             }
         });
 
